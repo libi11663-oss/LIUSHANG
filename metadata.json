@@ -1,0 +1,6 @@
+{
+  "name": "留聲",
+  "description": "把家人的故事與聲音留下來。從一次自在的聊天開始，將人生故事、照片與真實聲音留給下一代。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
