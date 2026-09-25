@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第三方測試網站 - AI 客服 Widget 嵌入驗證</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 680px;
+      width: 100%;
+      background: #1e293b;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      border: 1px solid #334155;
+    }
+    h1 {
+      font-size: 22px;
+      margin-top: 0;
+      color: #38bdf8;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #0284c7;
+      color: #fff;
+      font-size: 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .box {
+      background: #0f172a;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      color: #a7f3d0;
+      border: 1px solid #1e293b;
+      margin: 16px 0;
+      word-break: break-all;
+    }
+    .note {
+      font-size: 12px;
+      color: #facc15;
+      background: #713f1233;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #eab30844;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tag">第三方客戶官網情境模擬</div>
+    <h1>這是一家獨立客戶的網站（如日青設計 / 某某診所）</h1>
+    <p>
+      這頁模擬外部第三方客戶的網站。該客戶<strong>完全不需要把 GitHub 原始碼交給您</strong>，也<strong>不需要連接 Google AI Studio</strong>。
+    </p>
+    <p>
+      他們唯一需要做的，就是在他們的網頁中載入一行包含該公司專屬 <code>data-widget-id</code> 的 script：
+    </p>
+
+    <div class="box">
+      &lt;script src="/widget.js" data-widget-id="wgt_demo_company002" defer&gt;&lt;/script&gt;
+    </div>
+
+    <div class="note">
+      👉 請看右下角！已經自動長出這家公司的專屬 AI 客服！點開測試看看，外觀顏色與知識庫已經切換成示範企業的設定，與留聲完全隔離！
+    </div>
+  </div>
+
+  <!-- 模擬第三方網站載入示範公司 company_002 的 Widget -->
+  <script src="/widget.js" data-widget-id="wgt_demo_company002" defer></script>
+</body>
+</html>
