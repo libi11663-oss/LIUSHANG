@@ -5,8 +5,8 @@
 
 function resolveModelName(): string {
   const envModel = process.env.CHAT_MODEL_NAME;
-  if (!envModel || envModel.includes("2.5")) {
-    return "gemini-3.5-flash-lite";
+  if (!envModel || envModel.includes("2.5") || envModel.includes("3.5")) {
+    return "gemini-3.1-flash-lite";
   }
   return envModel;
 }

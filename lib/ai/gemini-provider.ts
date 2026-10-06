@@ -42,7 +42,14 @@ export class GeminiChatProvider implements AIChatProvider {
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
-      this.client = new GoogleGenAI({ apiKey });
+      this.client = new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+          headers: {
+            "User-Agent": "aistudio-build"
+          }
+        }
+      });
     }
   }
 
@@ -52,7 +59,14 @@ export class GeminiChatProvider implements AIChatProvider {
 
     // 動態確保 client 初始化（避免伺服器啟動階段時序問題）
     if (!this.client && process.env.GEMINI_API_KEY) {
-      this.client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      this.client = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            "User-Agent": "aistudio-build"
+          }
+        }
+      });
     }
 
     // 若未設定金鑰，友善降級回傳提示

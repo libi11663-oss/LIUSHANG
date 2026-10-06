@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>第三方測試網站 - AI 客服 Widget 嵌入驗證</title>
+  <title>yuelao.tw 妙算月老線上求籤 — AI 客服 Widget 實境預覽</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
+      font-family: "Noto Serif TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(ellipse at 50% -10%, #3a2020 0%, transparent 55%), linear-gradient(180deg, #1b1210 0%, #120c0b 100%);
+      color: #efe4cd;
       margin: 0;
       padding: 40px 20px;
       display: flex;
@@ -19,74 +19,122 @@
     .container {
       max-width: 680px;
       width: 100%;
-      background: #1e293b;
+      background: rgba(239, 228, 205, 0.05);
       padding: 32px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-      border: 1px solid #334155;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid rgba(201, 161, 90, 0.35);
     }
     h1 {
-      font-size: 22px;
+      font-size: 24px;
       margin-top: 0;
-      color: #38bdf8;
+      color: #e8c581;
+      letter-spacing: 2px;
     }
     p {
-      color: #94a3b8;
+      color: #e3d3ac;
       font-size: 14px;
-      line-height: 1.6;
+      line-height: 1.7;
     }
     .tag {
       display: inline-block;
-      padding: 4px 10px;
-      background: #0284c7;
-      color: #fff;
+      padding: 4px 12px;
+      background: #7c1f2b;
+      border: 1px solid #c9a15a;
+      color: #efe4cd;
       font-size: 12px;
-      border-radius: 999px;
+      border-radius: 4px;
       font-weight: 600;
       margin-bottom: 12px;
+      letter-spacing: 1px;
     }
     .box {
-      background: #0f172a;
+      background: #120c0b;
       padding: 16px;
       border-radius: 8px;
       font-family: monospace;
       font-size: 13px;
-      color: #a7f3d0;
-      border: 1px solid #1e293b;
+      color: #e8c581;
+      border: 1px solid rgba(201, 161, 90, 0.4);
       margin: 16px 0;
       word-break: break-all;
+      white-space: pre-wrap;
     }
     .note {
-      font-size: 12px;
-      color: #facc15;
-      background: #713f1233;
-      padding: 10px 14px;
+      font-size: 13px;
+      color: #e8c581;
+      background: rgba(124, 31, 43, 0.35);
+      padding: 12px 16px;
       border-radius: 8px;
-      border: 1px solid #eab30844;
+      border: 1px solid rgba(201, 161, 90, 0.4);
+      line-height: 1.6;
+    }
+    .switcher {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(201, 161, 90, 0.2);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 12px;
+      color: #c9a15a;
+    }
+    .switcher a {
+      color: #efe4cd;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(201, 161, 90, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .switcher a:hover {
+      background: #7c1f2b;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="tag">第三方客戶官網情境模擬</div>
-    <h1>這是一家獨立客戶的網站（如日青設計 / 某某診所）</h1>
+    <div class="tag">yuelao.tw 外部官網嵌入模擬</div>
+    <h1>妙算月老線上求籤（https://yuelao.tw/）</h1>
     <p>
-      這頁模擬外部第三方客戶的網站。該客戶<strong>完全不需要把 GitHub 原始碼交給您</strong>，也<strong>不需要連接 Google AI Studio</strong>。
+      本頁模擬 <strong>https://yuelao.tw/</strong> 載入專屬 AI 客服 Widget 的實際效果。系統已內建「妙算月老線上求籤」的<strong>擲筊三步驟、聖筊／笑筊／陰筊說明、六十甲子籤意解、PAYUNi 香油錢隨喜（NT$100）與隱私權規範</strong>知識庫。
     </p>
     <p>
-      他們唯一需要做的，就是在他們的網頁中載入一行包含該公司專屬 <code>data-widget-id</code> 的 script：
+      您只需要在 <code>yuelao.tw</code> 的 HTML 底部（<code>&lt;/body&gt;</code> 之前）貼上以下這一行代碼：
     </p>
 
-    <div class="box">
-      &lt;script src="/widget.js" data-widget-id="wgt_demo_company002" defer&gt;&lt;/script&gt;
+    <div class="box" id="codeBox">&lt;script
+  src="https://您的客服主機網址/widget.js"
+  data-widget-id="wgt_yuelao_live"
+  defer&gt;
+&lt;/script&gt;</div>
+
+    <div class="note" id="offeringBlock">
+      👉 <strong>請點擊畫面右下角的「💬 月老廟祝 AI 小幫手」測試！</strong><br />
+      外觀已自動套用 <code>yuelao.tw</code> 的胭脂酒紅（#7c1f2b）與廟宇鎏金（#c9a15a）配色，且與「留聲」的知識庫完全獨立隔離。
     </div>
 
-    <div class="note">
-      👉 請看右下角！已經自動長出這家公司的專屬 AI 客服！點開測試看看，外觀顏色與知識庫已經切換成示範企業的設定，與留聲完全隔離！
+    <div class="switcher">
+      <span>切換預覽不同租戶：</span>
+      <a href="/demo-client.html?widgetId=wgt_yuelao_live">妙算月老 (wgt_yuelao_live)</a>
+      <a href="/demo-client.html?widgetId=wgt_liusheng_live">留聲典藏 (wgt_liusheng_live)</a>
+      <a href="/demo-client.html?widgetId=wgt_demo_company002">示範企業 (wgt_demo_company002)</a>
+      <a href="/admin" style="margin-left:auto;color:#e8c581;">前往 SaaS 管理後台 →</a>
     </div>
   </div>
 
-  <!-- 模擬第三方網站載入示範公司 company_002 的 Widget -->
-  <script src="/widget.js" data-widget-id="wgt_demo_company002" defer></script>
+  <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var wId = params.get("widgetId") || "wgt_yuelao_live";
+      var box = document.getElementById("codeBox");
+      if (box) {
+        box.textContent = '<script\n  src="' + window.location.origin + '/widget.js"\n  data-widget-id="' + wId + '"\n  defer>\n<\/script>';
+      }
+    })();
+  </script>
+  <!-- 載入妙算月老線上求籤專屬 Widget -->
+  <script src="/widget.js" data-widget-id="wgt_yuelao_live" defer></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllCompaniesList } from "@/lib/saas/knowledge-service";
+import { REGISTERED_COMPANIES } from "@/lib/saas/company-store";
 
 /**
  * 簡易安全的 Admin 身份校驗機制
@@ -217,8 +218,22 @@ export async function POST(req: NextRequest) {
       }
     } else {
       writeTarget = "local_memory_preview";
-      // 若尚未綁定 Supabase 環境變數，回傳提示引導使用者填寫 Supabase 變數，同時建立展示資料
     }
+
+    // 同步寫入伺服器記憶體註冊表，確保即使未設定 Supabase 也能立即啟用並回應對話
+    REGISTERED_COMPANIES[companyId] = {
+      companyId,
+      widgetId,
+      companyKey: `comp_${companyId}_live`,
+      websiteUrl: websiteUrl || "",
+      status: "active",
+      allowedOrigins: origins.length > 0 ? origins : ["*"],
+      rateLimitPerMinute: Number(rateLimit) || 20,
+      publicConfig,
+      knowledgeBaseText: cleanKnowledge || `【${companyName.trim()}】官方客服知識庫`,
+      fallbackMessage: cleanFallback,
+      createdAt: new Date().toISOString()
+    };
 
     // 產生專屬網站安裝代碼 (Embed Code)
     const host = req.headers.get("host") || "mowang.com.tw";

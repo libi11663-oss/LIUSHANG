@@ -13,7 +13,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-Hant">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <script
+          src="https://ai-customer-service-saas-staging.up.railway.app/widget.js"
+          data-widget-id="wgt_4b6d1100a11970a7b5d3e700cb70c5a1"
+          defer
+        />
+      </body>
     </html>
   );
 }

@@ -13,7 +13,9 @@
       return scripts[scripts.length - 1];
     })();
 
+  var urlParams = new URLSearchParams(window.location.search);
   var widgetId =
+    urlParams.get("widgetId") ||
     currentScript.getAttribute("data-widget-id") ||
     currentScript.getAttribute("data-widget") ||
     "";
@@ -424,15 +426,20 @@
     msgDiv.className = "ai-widget-msg " + role;
     msgDiv.innerText = text;
 
-    // 若留聲或其他客戶提到表單，提供行動呼籲
+    // 若留聲、月老或其他客戶提到表單或香油錢，提供行動呼籲
     if (
       role === "assistant" &&
       config.ctaButton &&
-      (text.indexOf("申請表單") !== -1 || text.indexOf("留下聯絡資訊") !== -1)
+      (text.indexOf("申請表單") !== -1 ||
+        text.indexOf("留下聯絡資訊") !== -1 ||
+        text.indexOf("香油錢") !== -1 ||
+        text.indexOf("隨喜") !== -1)
     ) {
       var cta = document.createElement("div");
       var ctaBtn = document.createElement("a");
       ctaBtn.className = "ai-widget-cta-btn";
+      ctaBtn.style.color = config.theme.primaryColor;
+      ctaBtn.style.borderColor = config.theme.accentGold;
       ctaBtn.innerText = config.ctaButton.label;
       ctaBtn.href = config.ctaButton.targetSelectorOrUrl;
       ctaBtn.onclick = function () {

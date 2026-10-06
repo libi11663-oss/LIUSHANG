@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import QRCode from "qrcode";
 import {
   Building2,
   Plus,
@@ -14,7 +15,15 @@ import {
   LogOut,
   Palette,
   AlertCircle,
-  FileText
+  FileText,
+  QrCode,
+  ExternalLink,
+  HelpCircle,
+  Globe,
+  Layers,
+  Smartphone,
+  Download,
+  MessageSquare
 } from "lucide-react";
 
 interface CompanyItem {
@@ -39,7 +48,10 @@ export default function AdminDashboardPage() {
   // 公司列表與建立表單狀態
   const [companies, setCompanies] = useState<CompanyItem[]>([]);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
-  const [selectedEmbedCode, setSelectedEmbedCode] = useState<string | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<CompanyItem | null>(null);
+  const [integrationTab, setIntegrationTab] = useState<"standalone" | "script" | "gtm" | "cms" | "line">("standalone");
+  const [modalQrCode, setModalQrCode] = useState<string>("");
+  const [showGuideModal, setShowGuideModal] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [createMessage, setCreateMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -146,8 +158,19 @@ export default function AdminDashboardPage() {
 
       if (res.ok) {
         setCreateMessage({ type: "success", text: data.message || "建立成功！" });
-        if (data.company?.embedCode) {
-          setSelectedEmbedCode(data.company.embedCode);
+        if (data.company) {
+          openIntegrationModal({
+            companyId: data.company.companyId,
+            widgetId: data.company.widgetId,
+            companyName: data.company.companyName,
+            assistantName: data.company.assistantName,
+            websiteUrl: data.company.websiteUrl,
+            allowedOrigins: data.company.allowedOrigins || ["*"],
+            status: "active",
+            rateLimit: 20,
+            knowledgeLength: 0,
+            createdAt: new Date().toISOString()
+          });
         }
         fetchCompanies();
         // 清空表單
@@ -178,6 +201,21 @@ export default function AdminDashboardPage() {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const openIntegrationModal = (c: CompanyItem) => {
+    setSelectedCompany(c);
+    setIntegrationTab("standalone");
+    if (typeof window !== "undefined") {
+      const url = `${window.location.origin}/chat/${c.companyId}`;
+      QRCode.toDataURL(url, {
+        width: 240,
+        margin: 2,
+        color: { dark: "#0f172a", light: "#ffffff" }
+      })
+        .then((dataUrl) => setModalQrCode(dataUrl))
+        .catch(() => {});
+    }
   };
 
   // 1. 未登入介面
@@ -256,6 +294,13 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowGuideModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 font-medium text-xs rounded-xl border border-amber-500/30 transition shadow-sm"
+          >
+            <HelpCircle className="w-4 h-4 text-amber-400" />
+            <span>無網站／無法改HTML 替代指南</span>
+          </button>
           <button
             onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-medium text-xs rounded-xl transition-all shadow-md shadow-amber-500/20"
@@ -387,16 +432,34 @@ export default function AdminDashboardPage() {
                       </span>
                     </td>
                     <td className="py-4 px-4 text-right">
-                      <button
-                        onClick={() => {
-                          const code = `<!-- ${c.companyName} 專屬 AI 客服 Widget -->\n<script\n  src="${window.location.origin}/widget.js"\n  data-widget-id="${c.widgetId}"\n  defer>\n</script>`;
-                          setSelectedEmbedCode(code);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-lg text-xs border border-slate-700 transition"
-                      >
-                        <Code2 className="w-3.5 h-3.5" />
-                        取得安裝碼
-                      </button>
+                      <div className="inline-flex items-center gap-1.5 flex-wrap justify-end">
+                        <a
+                          href={`/chat/${encodeURIComponent(c.companyId)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg text-xs border border-blue-500/30 transition"
+                          title="客戶沒有網站時，直接給這條專屬連結，開箱即用！"
+                        >
+                          <Globe className="w-3.5 h-3.5" />
+                          <span>專屬獨立頁 (免網站)</span>
+                        </a>
+                        <a
+                          href={`/demo-client.html?widgetId=${encodeURIComponent(c.widgetId)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg text-xs border border-slate-700 transition"
+                        >
+                          浮動預覽
+                        </a>
+                        <button
+                          onClick={() => openIntegrationModal(c)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 rounded-lg text-xs border border-amber-500/30 transition"
+                          title="查看直連網址、QR Code、GTM 與 HTML 代碼"
+                        >
+                          <Layers className="w-3.5 h-3.5" />
+                          交付方案 &amp; QR
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -606,62 +669,432 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* 彈出視窗：查看 / 複製網站安裝碼 */}
-      {selectedEmbedCode && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+      {/* 彈出視窗：全方位交付方案（專屬獨立頁、QR Code、HTML 標籤、GTM、CMS、LINE） */}
+      {selectedCompany && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl p-6 shadow-2xl space-y-4 my-8">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Code2 className="w-5 h-5 text-amber-400" />
-                專屬網站安裝碼 (Embed Code)
-              </h3>
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-amber-400" />
+                  {selectedCompany.companyName} — AI 客服交付與串接方案
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Widget ID: <code className="text-amber-300 font-mono">{selectedCompany.widgetId}</code>
+                </p>
+              </div>
               <button
-                onClick={() => setSelectedEmbedCode(null)}
-                className="text-slate-400 hover:text-white"
+                onClick={() => setSelectedCompany(null)}
+                className="text-slate-400 hover:text-white p-1 text-sm font-bold"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
-              請將下方這段代碼交給客戶，客戶只要將它貼到自己官網 HTML 的 <code className="text-amber-300 font-mono">&lt;body&gt;</code> 結束標籤前，即可立刻啟用 AI 客服！
-            </p>
-
-            <div className="relative">
-              <pre className="p-4 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-emerald-300 overflow-x-auto">
-                {selectedEmbedCode}
-              </pre>
+            {/* 標籤頁切換 */}
+            <div className="flex items-center gap-1.5 p-1 bg-slate-950/70 border border-slate-800 rounded-xl overflow-x-auto text-xs">
               <button
-                onClick={() => copyToClipboard(selectedEmbedCode)}
-                className="absolute top-3 right-3 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-lg text-xs flex items-center gap-1.5 shadow"
+                onClick={() => setIntegrationTab("standalone")}
+                className={`px-3 py-1.5 rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1.5 ${
+                  integrationTab === "standalone"
+                    ? "bg-amber-500 text-slate-950 shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
               >
-                {copied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    已複製！
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    複製代碼
-                  </>
-                )}
+                <Globe className="w-3.5 h-3.5" />
+                <span>獨立專屬頁 &amp; QR Code (免網站)</span>
+              </button>
+              <button
+                onClick={() => setIntegrationTab("script")}
+                className={`px-3 py-1.5 rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1.5 ${
+                  integrationTab === "script"
+                    ? "bg-amber-500 text-slate-950 shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Code2 className="w-3.5 h-3.5" />
+                <span>官網 HTML &amp; iframe</span>
+              </button>
+              <button
+                onClick={() => setIntegrationTab("gtm")}
+                className={`px-3 py-1.5 rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1.5 ${
+                  integrationTab === "gtm"
+                    ? "bg-amber-500 text-slate-950 shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Google Tag Manager</span>
+              </button>
+              <button
+                onClick={() => setIntegrationTab("cms")}
+                className={`px-3 py-1.5 rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1.5 ${
+                  integrationTab === "cms"
+                    ? "bg-amber-500 text-slate-950 shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Shopify / WordPress / Wix</span>
+              </button>
+              <button
+                onClick={() => setIntegrationTab("line")}
+                className={`px-3 py-1.5 rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1.5 ${
+                  integrationTab === "line"
+                    ? "bg-amber-500 text-slate-950 shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>LINE 官方帳號 / IG</span>
               </button>
             </div>
 
-            <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700/60 text-[11px] text-slate-400 flex items-start gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <span>
-                安全性保證：代碼中僅包含公開的 Widget ID，不包含任何後端金鑰或私密知識庫。後端會在伺服器安全校驗來源網域。
-              </span>
-            </div>
+            {/* TAB 1: 獨立專屬頁 & QR Code (零網站 / 免改 HTML 首選) */}
+            {integrationTab === "standalone" && (
+              <div className="space-y-4 text-xs">
+                <div className="p-3.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-300 leading-relaxed">
+                  <div className="font-semibold text-white flex items-center gap-1.5 mb-1">
+                    <Globe className="w-4 h-4 text-blue-400" />
+                    客戶沒有網站，或無法修改 HTML 的終極解法：
+                  </div>
+                  客戶不需要擁有自己的伺服器或修改任何原始碼。只要給他下方這條獨立網址，任何人用手機或電腦點開即可直接與 AI 客服對話！
+                </div>
 
-            <div className="text-right pt-2">
+                <div>
+                  <label className="block text-slate-300 font-medium mb-1.5">
+                    專屬獨立對話網址 (全螢幕 Responsive 網頁)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={typeof window !== "undefined" ? `${window.location.origin}/chat/${selectedCompany.companyId}` : `/chat/${selectedCompany.companyId}`}
+                      className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-emerald-300 font-mono select-all focus:outline-none"
+                    />
+                    <button
+                      onClick={() =>
+                        copyToClipboard(
+                          typeof window !== "undefined"
+                            ? `${window.location.origin}/chat/${selectedCompany.companyId}`
+                            : `/chat/${selectedCompany.companyId}`
+                        )
+                      }
+                      className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition shrink-0"
+                    >
+                      {copied ? "已複製！" : "複製網址"}
+                    </button>
+                    <a
+                      href={`/chat/${selectedCompany.companyId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-medium transition shrink-0 flex items-center gap-1"
+                    >
+                      <span>開啟預覽</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                  <div className="flex flex-col items-center">
+                    {modalQrCode ? (
+                      <img
+                        src={modalQrCode}
+                        alt="QR Code"
+                        className="w-40 h-40 rounded-lg shadow-md border border-slate-700 bg-white p-1"
+                      />
+                    ) : (
+                      <div className="w-40 h-40 flex items-center justify-center bg-slate-900 rounded-lg text-slate-500">
+                        生成 QR 中...
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (!modalQrCode) return;
+                        const a = document.createElement("a");
+                        a.href = modalQrCode;
+                        a.download = `${selectedCompany.companyName}-qrcode.png`;
+                        a.click();
+                      }}
+                      className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      下載 QR Code (PNG)
+                    </button>
+                  </div>
+                  <div className="space-y-2 text-slate-300">
+                    <div className="font-semibold text-white">實體與社群落地場景：</div>
+                    <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-400">
+                      <li>印在<strong>實體店面櫃檯立牌、桌牌、菜單、海報</strong>，客人掃描立刻發問。</li>
+                      <li>印在<strong>業務名片</strong>背面，掃描即可進入專屬 24 小時智慧諮詢。</li>
+                      <li>放入<strong>診所掛號單、說明摺頁</strong>，隨時提供術後護理與療程解答。</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: 官網 HTML & iframe */}
+            {integrationTab === "script" && (
+              <div className="space-y-4 text-xs">
+                <p className="text-slate-300 leading-relaxed">
+                  若客戶<strong>有網站且能修改 HTML</strong>，請將下方代碼貼在官網的 <code className="text-amber-300 font-mono">&lt;body&gt;</code> 結束標籤前：
+                </p>
+
+                <div className="relative">
+                  <pre className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl font-mono text-emerald-300 overflow-x-auto text-[11px]">
+{`<!-- ${selectedCompany.companyName} 專屬 AI 客服 Widget -->
+<script
+  src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js"
+  data-widget-id="${selectedCompany.widgetId}"
+  defer>
+</script>`}
+                  </pre>
+                  <button
+                    onClick={() =>
+                      copyToClipboard(
+                        `<!-- ${selectedCompany.companyName} 專屬 AI 客服 Widget -->\n<script\n  src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js"\n  data-widget-id="${selectedCompany.widgetId}"\n  defer>\n</script>`
+                      )
+                    }
+                    className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] flex items-center gap-1 shadow"
+                  >
+                    {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    複製 script
+                  </button>
+                </div>
+
+                <div className="pt-2">
+                  <div className="font-semibold text-white mb-1.5">或使用 iframe 內嵌於頁面區塊：</div>
+                  <div className="relative">
+                    <pre className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl font-mono text-amber-300 overflow-x-auto text-[11px]">
+{`<iframe
+  src="${typeof window !== "undefined" ? window.location.origin : ""}/chat/${selectedCompany.companyId}"
+  width="100%"
+  height="600"
+  frameborder="0"
+  style="border-radius: 12px; border: 1px solid #ccc;">
+</iframe>`}
+                    </pre>
+                    <button
+                      onClick={() =>
+                        copyToClipboard(
+                          `<iframe\n  src="${typeof window !== "undefined" ? window.location.origin : ""}/chat/${selectedCompany.companyId}"\n  width="100%"\n  height="600"\n  frameborder="0"\n  style="border-radius: 12px; border: 1px solid #ccc;">\n</iframe>`
+                        )
+                      }
+                      className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] flex items-center gap-1 shadow"
+                    >
+                      複製 iframe
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: Google Tag Manager (GTM) */}
+            {integrationTab === "gtm" && (
+              <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300">
+                  <strong>外包工程團隊不願配合改 code 時的利器：</strong> 現代 90% 的企業官網都已安裝 Google Tag Manager。客戶的行銷或數位部門自己就能新增代碼發布，完全不需要動到網站工程師！
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-800 text-amber-400 font-bold flex items-center justify-center shrink-0 text-xs">1</span>
+                    <span>登入客戶的 <strong>Google Tag Manager (GTM)</strong> 容器後台。</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-800 text-amber-400 font-bold flex items-center justify-center shrink-0 text-xs">2</span>
+                    <span>左側點選「<strong>代碼 (Tags)</strong>」&gt; 點擊右上角「<strong>新增 (New)</strong>」。</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-800 text-amber-400 font-bold flex items-center justify-center shrink-0 text-xs">3</span>
+                    <span>代碼類型選擇「<strong>自訂 HTML (Custom HTML)</strong>」，將 Widget 的 script 標籤貼入。</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-800 text-amber-400 font-bold flex items-center justify-center shrink-0 text-xs">4</span>
+                    <span>觸發條件選擇「<strong>All Pages (所有網頁)</strong>」或「<strong>網頁瀏覽 (Page View)</strong>」。</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-800 text-amber-400 font-bold flex items-center justify-center shrink-0 text-xs">5</span>
+                    <span>點擊「<strong>儲存</strong>」並在右上角點擊「<strong>提交 (Submit) &gt; 發布</strong>」，1 分鐘全站生效！</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: Shopify / WordPress / Wix / SHOPLINE */}
+            {integrationTab === "cms" && (
+              <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
+                <div className="font-semibold text-white">常見架站平台貼法（後台設定欄位，免動 HTML 檔案）：</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1">
+                    <div className="font-bold text-amber-300">WordPress</div>
+                    <p className="text-[11px] text-slate-400">
+                      安裝免費外掛「<strong>WPCode</strong>」或「<strong>Insert Headers and Footers</strong>」，在 <em>Footer Scripts</em> 欄位貼上代碼並儲存。
+                    </p>
+                  </div>
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1">
+                    <div className="font-bold text-emerald-300">Shopify</div>
+                    <p className="text-[11px] text-slate-400">
+                      進入「線上商店 &gt; 佈景主題 &gt; 編輯程式碼 &gt; <code>theme.liquid</code>」，在 <code>&lt;/body&gt;</code> 前貼上即可。
+                    </p>
+                  </div>
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1">
+                    <div className="font-bold text-blue-300">Wix</div>
+                    <p className="text-[11px] text-slate-400">
+                      進入「設定 &gt; 進階 &gt; 自訂程式碼 (Custom Code)」，新增代碼並選擇貼在「Body - end」位置。
+                    </p>
+                  </div>
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1">
+                    <div className="font-bold text-purple-300">SHOPLINE / Cyberbiz</div>
+                    <p className="text-[11px] text-slate-400">
+                      進入後台「設定 &gt; 追蹤代碼設定 &gt; 第三方代碼」，選擇「全站 Body 結尾」貼入代碼。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: LINE 官方帳號 / Instagram / Facebook */}
+            {integrationTab === "line" && (
+              <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-300">
+                  <strong>台灣顧客最習慣的社群渠道：</strong> 客戶就算完全沒網站，只要有 LINE 官方帳號 (LINE OA) 或 Instagram，就能讓 AI 客服開始工作！
+                </div>
+                <div className="space-y-2 text-slate-300">
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                    <div className="font-bold text-emerald-400 mb-1">方法 1：LINE 官方帳號「圖文選單 (Rich Menu)」</div>
+                    <p className="text-[11px] text-slate-400">
+                      在 LINE Official Account Manager 後台設計圖文選單，將其中一格設定為動作：「<strong>開啟連結</strong>」，並填入該公司的<strong>專屬直連網址</strong>。顧客點選按鈕立刻全螢幕對話！
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                    <div className="font-bold text-emerald-400 mb-1">方法 2：LINE「加入好友歡迎訊息」與「自動回應」</div>
+                    <p className="text-[11px] text-slate-400">
+                      設定歡迎詞：「您好！若有任何服務問題，歡迎隨時點擊 24 小時智慧線上專員：<code>{typeof window !== "undefined" ? window.location.origin : ""}/chat/{selectedCompany.companyId}</code> 為您即時解答！」
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                    <div className="font-bold text-pink-400 mb-1">方法 3：Instagram / Facebook 個人簡介連結</div>
+                    <p className="text-[11px] text-slate-400">
+                      貼在 IG 商業帳號「個人檔案網址」或 Linktree 導流，標註「💬 24H 智慧線上諮詢」。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="text-right pt-3 border-t border-slate-800">
               <button
-                onClick={() => setSelectedEmbedCode(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs transition"
+                onClick={() => setSelectedCompany(null)}
+                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs transition"
               >
                 關閉
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 彈出視窗：全面攻略指南 (當客戶沒有網站或無法提供 HTML 時) */}
+      {showGuideModal && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl p-6 shadow-2xl space-y-4 my-8">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <HelpCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    客戶無網站／無法提供 HTML 的 5 大萬能替代方案
+                  </h3>
+                  <p className="text-xs text-slate-400">商業落地百寶箱 · 任何情境都能成功交付並收費</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowGuideModal(false)}
+                className="text-slate-400 hover:text-white p-1 text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs text-slate-300 leading-relaxed max-h-[70vh] overflow-y-auto pr-1">
+              <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
+                <div className="font-bold text-amber-300 text-sm flex items-center gap-1.5">
+                  <Globe className="w-4 h-4" />
+                  方案 1：託管專屬直連頁 (免網站，開箱即用)
+                </div>
+                <p className="text-slate-400 text-[11px]">
+                  <strong>適用情境：</strong>客戶完全沒有官網（實體店面、個人教練、自由工作者、團購主、餐廳、診所）。
+                </p>
+                <p>
+                  你這套系統已經為每個客戶自動生成專屬的 Hosted URL（例如 <code>/chat/yuelao</code>、<code>/chat/公司代碼</code>）。客戶不需要任何工程師，直接將網址提供給顧客即可全螢幕對話！
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
+                <div className="font-bold text-blue-300 text-sm flex items-center gap-1.5">
+                  <QrCode className="w-4 h-4" />
+                  方案 2：QR Code 實體立牌與名片
+                </div>
+                <p className="text-slate-400 text-[11px]">
+                  <strong>適用情境：</strong>咖啡廳、美容美髮、牙醫診所、展覽攤位、實體門市、紙本宣傳單。
+                </p>
+                <p>
+                  在後台下載專屬 QR Code 圖檔，交給印刷廠印製成「桌上壓克力立牌」、「櫃檯掃碼牌」或印在業務名片背面，顧客拿起手機相機掃描，立即啟動 24H 智慧答覆。
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
+                <div className="font-bold text-emerald-300 text-sm flex items-center gap-1.5">
+                  <MessageSquare className="w-4 h-4" />
+                  方案 3：LINE 官方帳號 (LINE OA) 圖文選單
+                </div>
+                <p className="text-slate-400 text-[11px]">
+                  <strong>適用情境：</strong>台灣絕大多數店家都有經營 LINE 官方帳號。
+                </p>
+                <p>
+                  在 LINE 官方帳號的「圖文選單 (Rich Menu)」切出一塊「24H 智慧線上諮詢」，動作設定為「開啟連結」並填入專屬直連頁。客人點擊後在手機瀏覽器無縫對話，體驗極佳。
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
+                <div className="font-bold text-purple-300 text-sm flex items-center gap-1.5">
+                  <Layers className="w-4 h-4" />
+                  方案 4：Google Tag Manager (GTM)
+                </div>
+                <p className="text-slate-400 text-[11px]">
+                  <strong>適用情境：</strong>客戶有網站，但網站由外包廠商維護，改 HTML 要加收費用或拖延數週。
+                </p>
+                <p>
+                  請客戶行銷窗口提供 GTM 帳號或代為操作，在 GTM 新增「自訂 HTML 代碼」貼上一行 script，發布後自動出現在全站右下角，完全避開外包合約與工程限制！
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
+                <div className="font-bold text-rose-300 text-sm flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4" />
+                  方案 5：Shopify / WordPress / Wix 後台設定欄
+                </div>
+                <p className="text-slate-400 text-[11px]">
+                  <strong>適用情境：</strong>客戶使用主流電商與建站系統，完全不需要修改 HTML 原始碼檔案。
+                </p>
+                <p>
+                  WordPress 透過「WPCode」或「Insert Headers and Footers」外掛；Shopify 透過「自訂程式碼」；Wix 透過「自訂代碼」設定，直接貼在後台框框內即刻啟用。
+                </p>
+              </div>
+            </div>
+
+            <div className="text-right pt-3 border-t border-slate-800">
+              <button
+                onClick={() => setShowGuideModal(false)}
+                className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-xl text-xs transition"
+              >
+                我知道了
               </button>
             </div>
           </div>
