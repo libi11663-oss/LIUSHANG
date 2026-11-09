@@ -100,7 +100,7 @@ export default function RootLayout({
         />
         {children}
         <script
-          src="https://ai-customer-service-saas-staging.up.railway.app/widget.js"
+          src="https://ai-customer-service-saas-production-7a07.up.railway.app/widget.js"
           data-widget-id="wgt_4b6d1100a11970a7b5d3e700cb70c5a1"
           defer
         />
